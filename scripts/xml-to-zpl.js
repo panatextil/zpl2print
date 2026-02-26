@@ -72,6 +72,17 @@ function money(value) {
   return num.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+function formatPeso(value) {
+  if (value == null || value === "") return "-";
+  const num = Number(String(value).replace(",", "."));
+  if (isNaN(num)) return String(value);
+  const fmt = num.toLocaleString("pt-BR", {
+    minimumFractionDigits: 3,
+    maximumFractionDigits: 3,
+  });
+  return fmt + " KG";
+}
+
 function fmtDate(value) {
   if (!value) return "";
   if (/^\d{4}-\d{2}-\d{2}/.test(value)) {
@@ -130,13 +141,20 @@ function formatCpfCnpj(value) {
   return digits;
 }
 
+function loadLogoLine() {
+  const logoPath = path.join(process.cwd(), "logo-model.zpl");
+  if (fs.existsSync(logoPath)) {
+    return fs.readFileSync(logoPath, "utf8").trim();
+  }
+  return "";
+}
+
 function generateDanfeLabel(data) {
   const ide = data.infNFe.ide || {};
   const emit = data.infNFe.emit || {};
   const dest = data.infNFe.dest || {};
   const transp = data.infNFe.transp || {};
   const transporta = transp.transporta || {};
-  const volume = asArray(transp.vol)[0] || {};
   const prot = data.infProt || {};
 
   const numeroNf = String(ide.nNF || "").padStart(6, "0");
@@ -161,61 +179,82 @@ function generateDanfeLabel(data) {
 
   const carrier = toAscii(transporta.xNome || "");
   const carrierDoc = formatCpfCnpj(transporta.CNPJ || transporta.CPF || "");
-  const qVol = toAscii(volume.qVol || "");
-  const especie = toAscii(volume.esp || "");
-  const marca = toAscii(volume.marca || "");
-  const numVol = toAscii(volume.nVol || "");
-  const pesoL = toAscii(volume.pesoL || "");
-  const pesoB = toAscii(volume.pesoB || "");
+  const carrierUf = toAscii(transporta.UF || "");
+  const volumes = asArray(transp.vol);
+  const qVol = toAscii(volumes[0]?.qVol || "");
+  const especie = toAscii(volumes[0]?.esp || "");
+  const marca = toAscii(volumes[0]?.marca || "");
+
+  const volumeLinesData = [];
+  for (const v of volumes) {
+    if (!v) continue;
+    const qty = Math.max(0, parseInt(v.qVol, 10) || 0);
+    if (qty === 0) continue;
+    for (let i = 0; i < qty; i++) {
+      volumeLinesData.push({
+        nVol: qty > 1 ? String(i + 1).padStart(2, "0") : (v.nVol ? toAscii(v.nVol) : "-"),
+        pesoL: formatPeso(v.pesoL),
+        pesoB: formatPeso(v.pesoB),
+      });
+    }
+  }
+
+  const emitLine = emitUf ? `${emitUf} - CPF/CNPJ: ${emitCnpj || "-"}` : `CPF/CNPJ: ${emitCnpj || "-"}`;
+  const destLine = destUf ? `${destUf} - CPF/CNPJ: ${destCpfCnpj || "-"}` : `CPF/CNPJ: ${destCpfCnpj || "-"}`;
+  const carrierLine = carrierUf ? `${carrierUf} - CPF/CNPJ: ${carrierDoc || "-"}` : `CPF/CNPJ: ${carrierDoc || "-"}`;
+
+  const logoLine = loadLogoLine();
 
   const lines = [
     "^XA",
     "^CI28",
     "^PW850",
-    "^LL1105",
+    "^LL1200",
     "^LH0,0",
-    "^FO20,20^GB810,1065,2^FS",
-    "^FO325,40^GFA,5000,5000,25,,::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::gJ0402,gJ0C023,g01I0C063,g01800C067,g01810C067,g01831E06F18,g01C39E4EF38,g01C39E4EE38,gG0E39JE78,gG0E39EDDE78,g08E39EFDC7,g0C619EFDCF,X080C719EFFCF,X0E0E71DEFBDE01C,X070E71DEFB9E01C,X078E79CEFFBE038,V02078F79CIFBC078,V0383C739CIF3C0F,V03C1C73DEIF780F,V01C1E7BDEIF781E,V01E1E7BDEJF81E,W0F0F39FEJF03C,W0F873DFEJF07C,W07C7BDFEJF078,W03E3BDFEJF0F8018,W01E3IFEIFE1F0038,X0F3MFE1F007,V01879MFC3E01F,V01E7DMFC7C03E,W0F3CMF87C07C,U03879EMF8F80F8,U03C7DF7LF1F81F,U01E3ENF1F03E,V0F1F7MF3E0FC,V078NFE7E0F801C,V03C7MFE7C3F007C,V01E3MFEF87E00F8,W0F3MFDF8FC03F,U0F879OF1F80FE,U07E3CMFBF3F01F8,U03F9F7MFEFE07F,U01FCFBMFDFC1FE,V07F7PF83F8,V03QFE0FF,W0QFC3FC00E,W03PF8FF00FF,U03F0PF3FE07FE,U07FE7NFEFFC3FF8,U03TF3FFC,V07UFE,W07TF,W01SFC,X03QFE,V0FF07PF,V0FFE0OF8,V01FFE3OFE,W07RFC,X0QFE,Y0OFC,Y01MFC,g07KFC,Y07KFE,X07LF8,X07C001FE,gI0F8,gI0F,:gI0E,::::::gH01E,:gH01C,:,::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::^FS",
-    zplText(35, 190, 34, "DANFE SIMPLIFICADO"),
-    zplText(35, 242, 28, `1 - SAIDA   SERIE ${serie}`),
-    zplText(35, 274, 28, `NUMERO ${numeroFmt}`),
-    zplText(35, 306, 28, `EMISSAO: ${emissao}`),
-    zplText(35, 338, 24, "CHAVE DE ACESSO"),
-    "^BY2,2,92",
-    "^FO35,368^BCN,92,N,N,N^FD" + (chave || "0") + "^FS",
-    "^FO640,135^BQN,2,5^FDLA," + qrPayload + "^FS",
-    zplText(35, 466, 22, chaveBlocos || "CHAVE NAO INFORMADA"),
-    zplText(35, 495, 24, "PROTOCOLO DE AUTORIZACAO DE USO"),
-    zplText(35, 525, 23, `${protocolo || "-"} - ${dhProt || "-"}`),
-    "^FO30,560^GB790,0,2^FS",
+    logoLine || "",
+    zplText(35, 220, 45, "DANFE SIMPLIFICADO"),
+    zplText(35, 270, 28, `NUMERO ${numeroFmt} - EMISSAO ${emissao}`),
+    zplText(35, 310, 28, `1 SAIDA SERIE ${serie}`),
+    zplText(35, 380, 24, "CHAVE DE ACESSO"),
+    "^BY2,2,10",
+    "^FO20,410^BCN,90,N,N,N^FD" + (chave || "0") + "^FS",
+    "^FO640,200^BQN,2,5^FDLA," + qrPayload + "^FS",
+    zplText(35, 515, 22, chaveBlocos || "CHAVE NAO INFORMADA"),
+    zplText(35, 550, 24, "PROTOCOLO DE AUTORIZACAO DE USO"),
+    zplText(35, 580, 23, `${protocolo || "-"} - ${dhProt || "-"}`),
+    "^FO30,610^GB790,0,2^FS",
 
-    zplText(35, 580, 30, "EMITENTE"),
-    zplText(35, 612, 27, emitNome || "-"),
-    zplText(35, 640, 24, emitUf || "-"),
-    zplText(35, 666, 24, `CPF/CNPJ ${emitCnpj || "-"}`),
-    zplText(540, 666, 24, `IE: ${emitIe || ""}`),
-    "^FO30,694^GB790,0,2^FS",
+    zplText(35, 650, 30, "EMITENTE"),
+    zplText(36, 650, 30, "EMITENTE"),
+    zplText(35, 690, 25, (emitNome || "-").toUpperCase()),
+    zplText(35, 720, 25, emitLine.toUpperCase()),
+    zplText(600, 720, 25, `IE: ${emitIe || ""}`),
+    "^FO30,750^GB790,0,2^FS",
 
-    zplText(35, 716, 30, "DESTINATARIO"),
-    zplText(35, 748, 27, destNome || "-"),
-    zplText(35, 776, 24, destUf || "-"),
-    zplText(35, 802, 24, `CPF/CNPJ ${destCpfCnpj || "-"}`),
-    zplText(540, 802, 24, `IE: ${destIe || ""}`),
-    "^FO30,830^GB790,0,2^FS",
+    zplText(35, 770, 30, "DESTINATARIO"),
+    zplText(36, 770, 30, "DESTINATARIO"),
+    zplText(35, 810, 25, (destNome || "-").toUpperCase()),
+    zplText(35, 840, 25, destLine.toUpperCase()),
+    zplText(600, 840, 25, `IE: ${destIe || ""}`),
+    "^FO30,870^GB790,0,2^FS",
+    "\n",
+    zplText(35, 890, 30, "TRANSPORTADOR"),
+    zplText(35, 890, 30, "TRANSPORTADOR"),
+    zplText(35, 930, 25, (carrier || "-").toUpperCase()),
+    zplText(35, 960, 25, carrierLine.toUpperCase()),
+    "^FO30,990^GB790,0,2^FS",
 
-    zplText(35, 852, 29, "TRANSPORTADOR"),
-    zplText(35, 884, 24, carrier || "-"),
-    zplText(35, 910, 22, `CPF/CNPJ ${carrierDoc || "-"}`),
-    "^FO30,936^GB790,0,2^FS",
-
-    zplText(35, 958, 29, "VOLUMES TRANSPORTADOS"),
-    zplText(35, 990, 21, `QTD: ${qVol || "-"}   ESPECIE: ${especie || "-"}   MARCA: ${marca || "-"}`),
-    zplText(35, 1016, 21, `NUMERACAO: ${numVol || "-"}   PESO L: ${pesoL || "-"}   PESO B: ${pesoB || "-"}`),
+    zplText(35, 1010, 30, "VOLUMES TRANSPORTADOS"),
+    zplText(36, 1010, 30, "VOLUMES TRANSPORTADOS"),
+    zplText(35, 1050, 21, `QTD: ${qVol || "-"} | ESPECIE: ${especie || "-"} | MARCA: ${marca || "-"}`),
+    ...(volumeLinesData.map((vl, i) =>
+      zplText(35, 1090 + i * 30, 21, `NUMERACAO: ${vl.nVol} | PESO L: ${vl.pesoL} | PESO B: ${vl.pesoB}`)
+    )),
     "^XZ",
     "",
   ];
 
-  return lines.join("\n");
+  return lines.filter(Boolean).join("\n");
 }
 
 function ensureDir(filePath) {
