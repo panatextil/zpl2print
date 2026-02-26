@@ -84,6 +84,61 @@ Duplo clique em qualquer `.zpl` → imprime automaticamente.
 
 ---
 
+## Impressão automática a partir de XML (duplo clique)
+
+O arquivo `print-xml.bat` faz tudo automaticamente:
+
+1. Recebe o XML da NF-e
+2. Gera o ZPL via `scripts/xml-to-zpl.js`
+3. Envia direto para a impressora RAW (`\\localhost\ZEBRARAW`)
+4. Remove o `.zpl` temporário
+
+### Pré-requisito
+
+Node.js instalado e `npm install` executado uma vez na pasta do projeto.
+
+### Associar extensão `.xml` ao bat (CMD como Administrador)
+
+```cmd
+assoc .xml=XMLNFe
+ftype XMLNFe="C:\Windows\System32\cmd.exe" /c ""C:\apps_blrv\ativos\zpl2print\print-xml.bat" "%1""
+```
+
+> Atenção: isso associa **todos** os `.xml` do Windows a este bat.
+> Se preferir usar só para NF-e, mantenha a associação manual (arrastar o XML sobre o bat).
+
+### Uso manual (sem associar extensão)
+
+Arraste qualquer `.xml` de NF-e sobre o `print-xml.bat` — imprime automaticamente.
+
+---
+
+## Gerar ZPL a partir de XML da NF-e (Node.js)
+
+Este projeto tambem inclui um script para converter um XML de NF-e em uma etiqueta ZPL no padrao `97mm x 150mm` (mesma area util usada na etiqueta dos Correios).
+
+### Instalar dependencias
+
+```bash
+npm install
+```
+
+### Gerar etiqueta
+
+```bash
+npm run gen:zpl -- temp/teste-NF-xml.xml temp/danfe-97x150.zpl
+```
+
+Ou diretamente:
+
+```bash
+node scripts/xml-to-zpl.js temp/teste-NF-xml.xml temp/danfe-97x150.zpl
+```
+
+O arquivo de saida pode ser impresso com o mesmo fluxo RAW ja configurado.
+
+---
+
 ## Especificação
 
 * Impressora: Zebra ZD220

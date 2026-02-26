@@ -1,0 +1,24 @@
+{
+  "name": "zpl2print",
+  "version": "1.0.0",
+  "description": "Permitir que arquivos `.zpl` imprimam automaticamente na Zebra via envio RAW.",
+  "main": "scripts/xml-to-zpl.js",
+  "scripts": {
+    "gen:zpl": "node scripts/xml-to-zpl.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/panatextil/zpl2print.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/panatextil/zpl2print/issues"
+  },
+  "homepage": "https://github.com/panatextil/zpl2print#readme",
+  "dependencies": {
+    "fast-xml-parser": "^5.4.1"
+  }
+}
