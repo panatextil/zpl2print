@@ -216,8 +216,8 @@ function generateDanfeLabel(data) {
     "^BY2,2,10",
     "^FO20,410^BCN,90,N,N,N^FD" + (chave || "0") + "^FS",
     "^FO640,200^BQN,2,5^FDLA," + qrPayload + "^FS",
-    zplText(35, 515, 22, chaveBlocos || "CHAVE NAO INFORMADA"),
-    zplText(35, 550, 24, "PROTOCOLO DE AUTORIZACAO DE USO"),
+    zplText(35, 515, 25, chaveBlocos || "CHAVE NAO INFORMADA"),
+    zplText(35, 550, 27, "PROTOCOLO DE AUTORIZACAO DE USO"),
     zplText(35, 580, 23, `${protocolo || "-"} - ${dhProt || "-"}`),
     "^FO30,610^GB790,0,2^FS",
 
