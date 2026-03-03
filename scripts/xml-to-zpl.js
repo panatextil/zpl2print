@@ -129,6 +129,14 @@ function zplText(x, y, size, text) {
   return `^FO${x},${y}^A0N,${size},${size}^FD${text}^FS`;
 }
 
+function formatCep(value) {
+  const digits = onlyDigits(value);
+  if (digits.length === 8) {
+    return `${digits.slice(0, 2)}.${digits.slice(2, 5)}-${digits.slice(5)}`;
+  }
+  return digits;
+}
+
 function formatCpfCnpj(value) {
   const digits = onlyDigits(value);
   if (digits.length === 11) {
@@ -166,11 +174,13 @@ function generateDanfeLabel(data) {
   const emitCnpj = formatCpfCnpj(emit.CNPJ || emit.CPF || "");
   const emitIe = toAscii(emit.IE || "");
   const emitEnder = buildEnderLines(emit.enderEmit || {});
+  const emitCep = formatCep((emit.enderEmit || {}).CEP || "");
 
   const destNome = toAscii(dest.xNome || "");
   const destCpfCnpj = formatCpfCnpj(dest.CPF || dest.CNPJ || "");
   const destIe = toAscii(dest.IE || "");
   const destEnder = buildEnderLines(dest.enderDest || {});
+  const destCep = formatCep((dest.enderDest || {}).CEP || "");
 
   const carrier = toAscii(transporta.xNome || "");
   const carrierDoc = formatCpfCnpj(transporta.CNPJ || transporta.CPF || "");
@@ -223,8 +233,8 @@ function generateDanfeLabel(data) {
     zplText(35, 570, 25, (emitNome || "-").toUpperCase()),
     zplText(35, 600, 25, (emitEnder[0] || "").toUpperCase()),
     zplText(35, 630, 25, (emitEnder[1] || "").toUpperCase()),
-    zplText(35, 660, 25, `CPF/CNPJ: ${emitCnpj || "-"}`),
-    zplText(600, 660, 25, `IE: ${emitIe || ""}`),
+    zplText(35, 660, 25, `${emitCep ? `CEP: ${emitCep} | ` : ""}CPF/CNPJ: ${emitCnpj || "-"}`),
+    zplText(640, 660, 25, `IE: ${emitIe || ""}`),
     "^FO30,700^GB790,0,2^FS",
 
     zplText(35, 720, 30, "DESTINATARIO"),
@@ -232,8 +242,8 @@ function generateDanfeLabel(data) {
     zplText(35, 750, 25, (destNome || "-").toUpperCase()),
     zplText(35, 780, 25, (destEnder[0] || "").toUpperCase()),
     zplText(35, 810, 25, (destEnder[1] || "").toUpperCase()),
-    zplText(35, 840, 25, `CPF/CNPJ: ${destCpfCnpj || "-"}`),
-    zplText(600, 840, 25, `IE: ${destIe || ""}`),
+    zplText(35, 840, 25, `${destCep ? `CEP: ${destCep} | ` : ""}CPF/CNPJ: ${destCpfCnpj || "-"}`),
+    zplText(640, 840, 25, `IE: ${destIe || ""}`),
     "^FO30,870^GB790,0,2^FS",
 
     zplText(35, 890, 30, "TRANSPORTADOR"),
