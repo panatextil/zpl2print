@@ -133,10 +133,35 @@ Eventos registrados:
 
 ---
 
+## Diagnóstico da fila (spool)
+
+Use o utilitário `check-spool-zebra.bat` para inspecionar e corrigir rapidamente a fila da Zebra.
+
+Comandos:
+
+```cmd
+check-spool-zebra.bat status
+check-spool-zebra.bat clear
+check-spool-zebra.bat restart
+check-spool-zebra.bat open
+```
+
+Sem argumentos, ele abre um menu interativo.
+
+| Comando   | Ação |
+|-----------|------|
+| `status`  | Mostra status da impressora e jobs na fila |
+| `clear`   | Remove jobs pendentes da fila |
+| `restart` | Reinicia o serviço `Spooler` |
+| `open`    | Abre a janela da fila da impressora |
+
+---
+
 ## Estrutura do projeto
 
 ```
 zpl2print/
+├── check-spool-zebra.bat   # Diagnóstico e manutenção da fila
 ├── print-xml-zpl.bat       # Script principal (XML e ZPL)
 ├── scripts/
 │   └── xml-to-zpl.js       # Conversor NF-e XML → ZPL (Node.js)
