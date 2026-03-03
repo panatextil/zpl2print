@@ -117,14 +117,12 @@ function getOrderNumber(infNFe) {
   return toAscii((((infNFe.compra || {}).xPed) || ""));
 }
 
-function buildAddress(dest) {
-  const end = dest.enderDest || {};
-  const l1 = `${end.xLgr || ""}, ${end.nro || "S/N"} ${end.xCpl ? `- ${end.xCpl}` : ""}`;
-  const l2 = `${end.xBairro || ""}`;
-  const cep = onlyDigits(end.CEP || "");
-  const cepFmt = cep.length === 8 ? `${cep.slice(0, 5)}-${cep.slice(5)}` : cep;
-  const l3 = `${cepFmt} ${end.xMun || ""}/${end.UF || ""}`;
-  return [toAscii(l1), toAscii(l2), toAscii(l3)].filter(Boolean);
+function buildEnderLines(ender) {
+  const end = ender || {};
+  const l1 = toAscii(`END: ${end.xLgr || ""}, ${end.nro || "S/N"}`);
+  const l2Parts = [end.xCpl, end.xBairro, end.xMun, end.UF].filter(Boolean);
+  const l2 = toAscii(l2Parts.join(" - "));
+  return [l1, l2];
 }
 
 function zplText(x, y, size, text) {
@@ -165,19 +163,20 @@ function generateDanfeLabel(data) {
   const dhProt = fmtDate(prot.dhRecbto || "");
 
   const emitNome = toAscii(emit.xNome || "");
-  const emitUf = toAscii(((emit.enderEmit || {}).UF) || "");
   const emitCnpj = formatCpfCnpj(emit.CNPJ || emit.CPF || "");
   const emitIe = toAscii(emit.IE || "");
+  const emitEnder = buildEnderLines(emit.enderEmit || {});
 
   const destNome = toAscii(dest.xNome || "");
-  const destUf = toAscii(((dest.enderDest || {}).UF) || "");
   const destCpfCnpj = formatCpfCnpj(dest.CPF || dest.CNPJ || "");
   const destIe = toAscii(dest.IE || "");
+  const destEnder = buildEnderLines(dest.enderDest || {});
 
   const carrier = toAscii(transporta.xNome || "");
   const carrierDoc = formatCpfCnpj(transporta.CNPJ || transporta.CPF || "");
   const carrierUf = toAscii(transporta.UF || "");
   const volumes = asArray(transp.vol);
+
   const qVol = toAscii(volumes[0]?.qVol || "");
   const especie = toAscii(volumes[0]?.esp || "");
   const marca = toAscii(volumes[0]?.marca || "");
@@ -196,8 +195,6 @@ function generateDanfeLabel(data) {
     }
   }
 
-  const emitLine = emitUf ? `${emitUf} - CPF/CNPJ: ${emitCnpj || "-"}` : `CPF/CNPJ: ${emitCnpj || "-"}`;
-  const destLine = destUf ? `${destUf} - CPF/CNPJ: ${destCpfCnpj || "-"}` : `CPF/CNPJ: ${destCpfCnpj || "-"}`;
   const carrierLine = carrierUf ? `${carrierUf} - CPF/CNPJ: ${carrierDoc || "-"}` : `CPF/CNPJ: ${carrierDoc || "-"}`;
 
   const logoLine = loadLogoLine();
@@ -209,32 +206,36 @@ function generateDanfeLabel(data) {
     "^LL1200",
     "^LH0,0",
     logoLine || "",
-    zplText(35, 220, 45, "DANFE SIMPLIFICADO"),
-    zplText(35, 270, 28, `EMISSAO ${emissao}`),
-    zplText(35, 310, 28, `No. ${numeroFmt} | 1 SAIDA | SERIE ${serie}`),
-    zplText(35, 380, 24, "CHAVE DE ACESSO"),
+    zplText(35, 170, 45, "DANFE SIMPLIFICADO"),
+    zplText(35, 220, 28, `EMISSAO ${emissao}`),
+    zplText(35, 260, 28, `No. ${numeroFmt} | 1 SAIDA SERIE ${serie}`),
+    "^FO640,170^BQN,2,5^FDLA," + qrPayload + "^FS",
+    zplText(35, 310, 24, "CHAVE DE ACESSO"),
     "^BY2,2,10",
-    "^FO20,410^BCN,90,N,N,N^FD" + (chave || "0") + "^FS",
-    "^FO640,200^BQN,2,5^FDLA," + qrPayload + "^FS",
-    zplText(35, 515, 25, chaveBlocos || "CHAVE NAO INFORMADA"),
-    zplText(35, 550, 27, "PROTOCOLO DE AUTORIZACAO DE USO"),
-    zplText(35, 580, 23, `${protocolo || "-"} - ${dhProt || "-"}`),
-    "^FO30,610^GB790,0,2^FS",
+    "^FO20,330^BCN,90,N,N,N^FD" + (chave || "0") + "^FS",
+    zplText(35, 430, 25, chaveBlocos || "CHAVE NAO INFORMADA"),
+    zplText(35, 460, 27, "PROTOCOLO DE AUTORIZACAO DE USO"),
+    zplText(35, 490, 23, `${protocolo || "-"} - ${dhProt || "-"}`),
+    "^FO30,520^GB790,0,2^FS",
 
-    zplText(35, 650, 30, "EMITENTE"),
-    zplText(36, 650, 30, "EMITENTE"),
-    zplText(35, 690, 25, (emitNome || "-").toUpperCase()),
-    zplText(35, 720, 25, emitLine.toUpperCase()),
-    zplText(600, 720, 25, `IE: ${emitIe || ""}`),
-    "^FO30,750^GB790,0,2^FS",
+    zplText(35, 540, 30, "EMITENTE"),
+    zplText(36, 540, 30, "EMITENTE"),
+    zplText(35, 570, 25, (emitNome || "-").toUpperCase()),
+    zplText(35, 600, 25, (emitEnder[0] || "").toUpperCase()),
+    zplText(35, 630, 25, (emitEnder[1] || "").toUpperCase()),
+    zplText(35, 660, 25, `CPF/CNPJ: ${emitCnpj || "-"}`),
+    zplText(600, 660, 25, `IE: ${emitIe || ""}`),
+    "^FO30,700^GB790,0,2^FS",
 
-    zplText(35, 770, 30, "DESTINATARIO"),
-    zplText(36, 770, 30, "DESTINATARIO"),
-    zplText(35, 810, 25, (destNome || "-").toUpperCase()),
-    zplText(35, 840, 25, destLine.toUpperCase()),
+    zplText(35, 720, 30, "DESTINATARIO"),
+    zplText(36, 720, 30, "DESTINATARIO"),
+    zplText(35, 750, 25, (destNome || "-").toUpperCase()),
+    zplText(35, 780, 25, (destEnder[0] || "").toUpperCase()),
+    zplText(35, 810, 25, (destEnder[1] || "").toUpperCase()),
+    zplText(35, 840, 25, `CPF/CNPJ: ${destCpfCnpj || "-"}`),
     zplText(600, 840, 25, `IE: ${destIe || ""}`),
     "^FO30,870^GB790,0,2^FS",
-    "\n",
+
     zplText(35, 890, 30, "TRANSPORTADOR"),
     zplText(36, 890, 30, "TRANSPORTADOR"),
     zplText(35, 930, 25, (carrier || "-").toUpperCase()),
