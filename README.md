@@ -1,150 +1,157 @@
-# Zebra ZD220 – Impressão ZPL (RAW)
+# zpl2print – Impressão ZPL/DANFE na Zebra (RAW)
 
-## Objetivo
-
-Permitir que arquivos `.zpl` imprimam automaticamente na Zebra via envio RAW.
+Converte XML de NF-e em etiqueta ZPL e envia direto para impressora Zebra via porta RAW.
 
 ---
 
-## 1. Instalar driver Zebra
+## Pré-requisitos
+
+- Windows 10/11
+- Node.js instalado e disponível no PATH
+- Impressora Zebra configurada (ver seção abaixo)
+
+---
+
+## Configuração da Impressora
+
+### 1. Instalar driver Zebra
 
 Instalar **ZDesigner ZD220-203dpi ZPL** normalmente.
 
----
-
-## 2. Criar impressora RAW (ponte)
+### 2. Criar impressora RAW (ponte)
 
 Adicionar impressora local:
 
-* Porta: `USB001`
-* Driver: **Generic / Text Only**
-* Nome: `Generic / Text Only`
+- Porta: `USB001`
+- Driver: **Generic / Text Only**
+- Nome: `Generic / Text Only`
 
----
-
-## 3. Compartilhar impressora
+### 3. Compartilhar a impressora
 
 Propriedades → Compartilhamento:
 
-* Marcar **Compartilhar esta impressora**
-* Nome do compartilhamento:
+- Marcar **Compartilhar esta impressora**
+- Nome do compartilhamento: `ZEBRA` (ou o nome que preferir)
 
-```
-ZEBRARAW
-```
-
-Confirmar:
+Verificar com:
 
 ```cmd
 net share
 ```
 
----
-
-## 4. Ajustes obrigatórios
+### 4. Ajustes obrigatórios
 
 Propriedades → Avançado:
 
-* ✔ Imprimir diretamente na impressora
-* ✖ Desabilitar recursos avançados
+- ✔ Imprimir diretamente na impressora
+- ✖ Desabilitar recursos avançados
 
 ---
 
-## 5. Script de impressão
+## Instalação do projeto
 
-Criar:
-
-```
-C:\Zebra\print-zpl.bat
-```
-
-Conteúdo:
-
-```bat
-@echo off
-copy /b "%~1" "\\localhost\ZEBRARAW" >nul
-```
-
----
-
-## 6. Associar extensão .zpl
-
-CMD (Administrador):
-
-```cmd
-assoc .zpl=ZPLFile
-ftype ZPLFile="C:\Windows\System32\cmd.exe" /c ""C:\Zebra\print-zpl.bat" "%1""
+```bash
+npm install
 ```
 
 ---
 
 ## Uso
 
-Duplo clique em qualquer `.zpl` → imprime automaticamente.
+### Script principal: `print-xml-zpl.bat`
 
----
+Script único que aceita `.xml` ou `.zpl`:
 
-## Impressão automática a partir de XML (duplo clique)
+- **XML** → converte para ZPL via `scripts/xml-to-zpl.js` → envia para impressora
+- **ZPL** → envia direto para impressora
 
-O arquivo `print-xml.bat` faz tudo automaticamente:
+**Duplo clique** ou arrastar o arquivo sobre o `.bat` — imprime automaticamente.
 
-1. Recebe o XML da NF-e
-2. Gera o ZPL via `scripts/xml-to-zpl.js`
-3. Envia direto para a impressora RAW (`\\localhost\ZEBRARAW`)
-4. Remove o `.zpl` temporário
-
-### Pré-requisito
-
-Node.js instalado e `npm install` executado uma vez na pasta do projeto.
-
-### Associar extensão `.xml` ao bat (CMD como Administrador)
+**Via terminal:**
 
 ```cmd
-assoc .xml=XMLNFe
-ftype XMLNFe="C:\Windows\System32\cmd.exe" /c ""C:\apps_blrv\ativos\zpl2print\print-xml.bat" "%1""
+print-xml-zpl.bat caminho\para\nota.xml
+print-xml-zpl.bat caminho\para\etiqueta.zpl
 ```
 
-> Atenção: isso associa **todos** os `.xml` do Windows a este bat.
-> Se preferir usar só para NF-e, mantenha a associação manual (arrastar o XML sobre o bat).
+### Configurações (início do `print-xml-zpl.bat`)
 
-### Uso manual (sem associar extensão)
+```bat
+set "PRINTER_SHARE=ZEBRA"
+set "KEEP_ZPL=0"
+```
 
-Arraste qualquer `.xml` de NF-e sobre o `print-xml.bat` — imprime automaticamente.
+| Variável        | Descrição                                                   |
+|-----------------|-------------------------------------------------------------|
+| `PRINTER_SHARE` | Nome do compartilhamento da impressora (`net share`)        |
+| `KEEP_ZPL`      | `0` = apaga o `.zpl` após imprimir · `1` = mantém para debug |
 
 ---
 
-## Gerar ZPL a partir de XML da NF-e (Node.js)
+## Associar extensões ao bat (opcional)
 
-Este projeto tambem inclui um script para converter um XML de NF-e em uma etiqueta ZPL no padrao `97mm x 150mm` (mesma area util usada na etiqueta dos Correios).
+Para que duplo clique em `.xml` ou `.zpl` já imprima automaticamente,
+execute no CMD como **Administrador**:
 
-### Instalar dependencias
+```cmd
+assoc .zpl=ZPLFile
+ftype ZPLFile="C:\Windows\System32\cmd.exe" /c ""C:\apps_development\apps_ativos\zpl2print\print-xml-zpl.bat" "%1""
 
-```bash
-npm install
+assoc .xml=XMLNFe
+ftype XMLNFe="C:\Windows\System32\cmd.exe" /c ""C:\apps_development\apps_ativos\zpl2print\print-xml-zpl.bat" "%1""
 ```
 
-### Gerar etiqueta
+> **Atenção:** associar `.xml` afeta todos os arquivos XML do Windows.
+> Se preferir, use apenas arrastar o arquivo sobre o `.bat`.
 
-```bash
-npm run gen:zpl -- temp/teste-NF-xml.xml temp/danfe-97x150.zpl
+---
+
+## Log de eventos
+
+Cada execução grava em `logs\print-events.log`:
+
+```
+[2026-03-03 12:41:22 UTC-3] [INFO] [print-xml-zpl.bat] [start] type=".zpl" file="etiqueta.zpl" printer="ZEBRA" message="inicio_processamento_zpl"
+[2026-03-03 12:41:23 UTC-3] [INFO] [print-xml-zpl.bat] [printed_success] type=".zpl" file="etiqueta.zpl" printer="ZEBRA" message="zpl_enviado_para_impressora"
 ```
 
-Ou diretamente:
+Eventos registrados:
 
-```bash
-node scripts/xml-to-zpl.js temp/teste-NF-xml.xml temp/danfe-97x150.zpl
+| Evento                  | Descrição                              |
+|-------------------------|----------------------------------------|
+| `start`                 | Início do processamento                |
+| `zpl_generated`         | ZPL gerado com sucesso (fluxo XML)     |
+| `printed_success`       | ZPL enviado para impressora            |
+| `zpl_deleted`           | Arquivo ZPL removido (`KEEP_ZPL=0`)    |
+| `zpl_kept`              | Arquivo ZPL mantido (`KEEP_ZPL=1`)     |
+| `file_not_found`        | Arquivo de entrada não encontrado      |
+| `zpl_generate_failed`   | Falha na conversão XML → ZPL           |
+| `print_failed`          | Falha ao enviar para impressora        |
+| `node_not_found`        | Node.js não encontrado no PATH         |
+| `unsupported_extension` | Extensão não suportada (não .xml/.zpl) |
+| `missing_argument`      | Nenhum arquivo informado               |
+
+---
+
+## Estrutura do projeto
+
 ```
-
-O arquivo de saida pode ser impresso com o mesmo fluxo RAW ja configurado.
+zpl2print/
+├── print-xml-zpl.bat       # Script principal (XML e ZPL)
+├── scripts/
+│   └── xml-to-zpl.js       # Conversor NF-e XML → ZPL (Node.js)
+├── logs/
+│   └── print-events.log    # Log de eventos (gerado automaticamente)
+├── package.json
+└── README.md
+```
 
 ---
 
 ## Especificação
 
-* Impressora: Zebra ZD220
-* Linguagem: ZPL
-* Modo: RAW
-* Etiqueta: 9,7 x 15 cm
-* Resolução: 203 dpi
-
----
+- Impressora: Zebra ZD220
+- Linguagem: ZPL
+- Modo: RAW via `\\localhost\ZEBRA`
+- Etiqueta: 97mm × 150mm
+- Resolução: 203 dpi
