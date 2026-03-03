@@ -1,0 +1,5 @@
+node_modules/
+logs/
+
+# Artefatos locais de ZPL/debug
+*-nfe.zpl
