@@ -1,5 +1,6 @@
 node_modules/
 logs/
+temp/
 
 # Artefatos locais de ZPL/debug
 *-nfe.zpl
