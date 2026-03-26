@@ -18,20 +18,17 @@ Converte XML de NF-e em etiqueta ZPL e envia direto para impressora Zebra via po
 
 Instalar **ZDesigner ZD220-203dpi ZPL** normalmente.
 
-### 2. Criar impressora RAW (ponte)
+### 2. Compartilhar a impressora ZDesigner
 
-Adicionar impressora local:
-
-- Porta: `USB001`
-- Driver: **Generic / Text Only**
-- Nome: `Generic / Text Only`
-
-### 3. Compartilhar a impressora
+Após instalar o driver, a impressora `ZDesigner ZD220-203dpi ZPL` aparece automaticamente.
+Compartilhe ela diretamente (não é necessário criar uma impressora genérica):
 
 Propriedades → Compartilhamento:
 
 - Marcar **Compartilhar esta impressora**
-- Nome do compartilhamento: `ZEBRA` (ou o nome que preferir)
+- Nome do compartilhamento: `ZEBRA`
+
+> **Atenção:** certifique-se de que a porta usada é a porta nativa Zebra (descrição `Zebra Technologies ZTC ZD220-203dpi ZPL`), não uma porta USB genérica como `USB002`. Veja a seção Troubleshooting se houver dúvida.
 
 Verificar com:
 
@@ -170,6 +167,69 @@ zpl2print/
 ├── package.json
 └── README.md
 ```
+
+---
+
+## Troubleshooting
+
+### Impressora não encontrada / `printer_share_not_found`
+
+**Sintoma:** o script loga `printer_share_not_found` e nada é impresso.
+
+**Causa mais comum:** o compartilhamento `ZEBRA` está apontando para a porta errada ou foi perdido.
+
+**Como diagnosticar:**
+
+```cmd
+wmic printer get Name,ShareName,PortName,DriverName /format:list
+```
+
+**Situação correta esperada:**
+
+| Impressora | Driver | Porta | Share |
+|---|---|---|---|
+| `ZDesigner ZD220-203dpi ZPL` | ZDesigner (nativo Zebra) | `USB005` | `ZEBRA` |
+
+> A porta `USB005` pode variar — o importante é que seja a porta nativa da Zebra (`Zebra Technologies ZTC ZD220-203dpi ZPL`), não uma porta USB genérica.
+
+**Como verificar as portas:**
+
+```cmd
+wmic printerport get Name,Description /format:list
+```
+
+Procure a porta com `Description=Zebra Technologies ZTC ZD220-203dpi ZPL` — essa é a correta.
+
+---
+
+### Impressora Zebra sumiu da lista após troca de porta
+
+**Causa:** trocar a porta de uma impressora para uma porta já em uso por outra pode fazer o Windows remover ambas.
+
+**Solução:**
+
+1. Desconecte e reconecte o cabo USB da Zebra ZD220 — o Windows reinstala o driver automaticamente.
+2. Verifique se a impressora `ZDesigner ZD220-203dpi ZPL` voltou na lista.
+3. Compartilhe ela com o nome `ZEBRA`:
+   - Painel de Controle → Dispositivos e Impressoras → clique direito → Propriedades da impressora → aba **Compartilhamento**
+   - Marcar **Compartilhar esta impressora** → nome: `ZEBRA`
+4. Confirme com:
+
+```cmd
+wmic printer get Name,ShareName,PortName /format:list
+```
+
+---
+
+### Verificar se o envio RAW funciona diretamente
+
+Independente do script, teste o envio manual:
+
+```cmd
+copy /b "caminho\para\arquivo.zpl" "\\localhost\ZEBRA"
+```
+
+Se imprimir, o problema é apenas no script (verificação de fila via PowerShell). Se não imprimir, o problema é na configuração da impressora/porta.
 
 ---
 
