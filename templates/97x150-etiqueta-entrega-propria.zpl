@@ -8,38 +8,38 @@
 
 
 ^FO545,35^FR^A0N,22^FDPEDIDO^FS
-^FO545,62^FR^A0N,95^FD#1761^FS
+^FO545,62^FR^A0N,95^FD#1764^FS
 
 
 ^FO20,155^GB772,60,40^FS
 ^FR^FO55,170^A0N,35^FDREMETENTE^FS^FR
 
 ^FO55,230^A0N,30^FDPANA TEXTIL LTDA^FS
-^FO55,268^A0N,26^FDRua Doutor Jose Lino, 878^FS
-^FO55,301^A0N,26^FDVarjota  -  60175-426  Fortaleza/CE^FS
-^FO55,334^A0N,26^FDTel: (85) 99999-0000^FS
+^FO55,268^A0N,26^FDRua República do Líbano, 540^FS
+^FO55,301^A0N,26^FDMeireles - Fortaleza/CE^FS
+^FO55,334^A0N,26^FDCEP: 60.160-140^FS
 
 
 ^FO20,370^GB772,60,40^FS
 ^FR^FO55,390^A0N,35^FDDESTINATARIO^FS^FR
-^FO55,445^A0N,34^FDDunas Hoteis (Jackson)^FS
-^FO55,478^A0N,28^FDAvenida Henrique Leal, 23^FS
-^FO55,513^A0N,28^FDCOHAB Anil III^FS
-^FO55,548^A0N,28^FD65.051-090 Sao Luis/MA^FS
+^FO55,445^A0N,34^FDAldilene Pinto^FS
+^FO55,478^A0N,28^FDRua Marques de Pinho, 102 - Apto 803B^FS
+^FO55,513^A0N,28^FDEngenheiro Luciano Cavalcante - Fortaleza/CE^FS
+^FO55,548^A0N,28^FDCEP: 60.813-809^FS
 
 ^FO20,590^GB772,3,3^FS
 
 ^FO100,605^A0N,30^FDWaze^FS
-^FO100,630^BQN,2,5^FDQA,https://waze.com/ul?q=Av+Henrique+Leal+23+Sao+Luis+MA^FS
+^FO100,630^BQN,2,5^FDQA,https://waze.com/ul?q=Rua+Marques+de+Pinho+102+Apto+803B+Engenheiro+Luciano+Cavalcante+Fortaleza+CE+60.813-809+Brasil^FS
 
 ^FO415,605^A0N,30^FDGoogle Maps^FS
-^FO415,630^BQN,2,5^FDQA,https://maps.google.com/?q=Avenida+Henrique+Leal+23+COHAB+Anil+III+Sao+Luis+MA^FS
+^FO415,630^BQN,2,5^FDQA,https://maps.google.com/?q=Rua+Marques+de+Pinho+102+Apto+803B+Engenheiro+Luciano+Cavalcante+Fortaleza+CE+60.813-809+Brasil^FS
 
 ^FO20,940^GB772,3,3^FS
 
 ^FO55,955^A0N,26^FDObservação:^FS
-^FO55,1000^A0N,35^FD- Entregar na portaria^FS
-^FO55,1040^A0N,35^FD- A partir das 8h^FS
-^FO55,1080^A0N,35^FD-^FS
-^FO55,1120^A0N,35^FD-^FS
+^FO55,1000^A0N,35^FD^FS
+^FO55,1040^A0N,35^FD^FS
+^FO55,1080^A0N,35^FD^FS
+^FO55,1120^A0N,35^FD^FS
 ^XZ
