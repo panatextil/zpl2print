@@ -30,7 +30,7 @@
 ^FO20,590^GB772,3,3^FS
 
 ^FO140,605^A0N,30^FDWaze^FS
-^FO100,630^BQN,2,6^FDQA,https://waze.com/ul?q=Av+Henrique+Leal+23+Sao+Luis+MA^FS
+^FO100,630^BQN,2,5^FDQA,https://waze.com/ul?q=Av+Henrique+Leal+23+Sao+Luis+MA^FS
 
 ^FO420,605^A0N,30^FDGoogle Maps^FS
 ^FO415,630^BQN,2,5^FDQA,https://maps.google.com/?q=Avenida+Henrique+Leal+23+COHAB+Anil+III+Sao+Luis+MA^FS
